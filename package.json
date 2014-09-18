@@ -1,0 +1,44 @@
+{
+  "author": "Kevin Conway <kevinjacobconway@gmail.com> (https://github.com/kevinconway)",
+  "name": "itertoolsjs",
+  "description": "Async iterators.",
+  "version": "0.1.0",
+  "homepage": "https://github.com/kevinconway/itertools.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/kevinconway/itertools.js.git"
+  },
+  "keywords": [
+    "iter",
+    "iterator",
+    "iterators",
+    "iterable",
+    "iterables",
+    "itertools",
+    "async"
+  ],
+  "main": "./itertools/index.js",
+  "scripts": {
+    "test": "grunt"
+  },
+  "dependencies": {
+    "deferjs": "3.x.x",
+    "deferredjs": ">=7.1.3, <8.x.x",
+    "loopjs": "^4.2.0",
+    "modelo": ">=4.1.2, <5.x.x"
+  },
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "grunt": "^0.4.4",
+    "grunt-browserify": "^2.1.3",
+    "grunt-contrib-uglify": "^0.4.0",
+    "grunt-jslint": "^1.1.8",
+    "grunt-mocha-test": "^0.10.2",
+    "grunt-shell": "^0.7.0",
+    "mocha": "^1.20.1"
+  },
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}
