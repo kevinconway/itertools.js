@@ -27,46 +27,23 @@ module.exports = (function () {
   "use strict";
 
   var util = require('util'),
-    when = require('deferredjs').when,
-    iter = require('./iter'),
-    Iterator = require('../core/iterator'),
+    FilterIteratorBase = require('./filterbase'),
     Iterable = require('../core/iterable');
-
-  function truthy(v) {
-    if (v) {
-      return true;
-    }
-    return false;
-  }
 
   function FilterFalseIterator(test, iterable) {
 
-    Iterator.call(this);
-    this.source = iter(iterable);
-    this.testFn = test || truthy;
+    FilterIteratorBase.call(this, test, iterable);
 
   }
-  util.inherits(FilterFalseIterator, Iterator);
+  util.inherits(FilterFalseIterator, FilterIteratorBase);
 
-  FilterFalseIterator.prototype.test = function test(resolve, reject, value) {
+  FilterFalseIterator.prototype.test = function test(resolve, reject, value, pass) {
 
-    try {
-      when(this.testFn(value)).then(function (v) {
-        if (v) {
-          this.iter(resolve, reject);
-          return undefined;
-        }
-        resolve(value);
-      }.bind(this), reject);
-    } catch (err) {
-      reject(err);
+    if (pass) {
+      this.iter(resolve, reject);
+      return undefined;
     }
-
-  };
-
-  FilterFalseIterator.prototype.iter = function iter(resolve, reject) {
-
-    this.source.next().then(this.test.bind(this, resolve, reject), reject);
+    resolve(value);
 
   };
 
