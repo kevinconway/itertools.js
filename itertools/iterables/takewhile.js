@@ -27,54 +27,26 @@ module.exports = (function () {
   "use strict";
 
   var util = require('util'),
-    when = require('deferredjs').when,
-    iter = require('./iter'),
-    Iterator = require('../core/iterator'),
-    Iterable = require('../core/iterable'),
-    StopIterationError = require('../core/stopiteration');
+    FilterIteratorBase = require('./filterbase'),
+    Iterable = require('../core/iterable');
 
-  function truthy(v) {
-    if (v) {
-      return true;
-    }
-    return false;
-  }
 
   function TakeWhileIterator(test, iterable) {
 
-    Iterator.call(this);
-    this.source = iter(iterable);
-    this.testFn = test || truthy;
-    this.testing = true;
+    FilterIteratorBase.call(this, test, iterable);
 
   }
-  util.inherits(TakeWhileIterator, Iterator);
+  util.inherits(TakeWhileIterator, FilterIteratorBase);
 
-  TakeWhileIterator.prototype.test = function test(resolve, reject, value) {
+  TakeWhileIterator.prototype.test = function test(resolve, reject, value, pass) {
 
-    try {
-      when(this.testFn(value)).then(function (v) {
-        if (!v) {
-          this.testing = false;
-          this.iter(resolve, reject);
-          return undefined;
-        }
-        resolve(value);
-      }.bind(this), reject);
-    } catch (err) {
-      reject(err);
-    }
-
-  };
-
-  TakeWhileIterator.prototype.iter = function iter(resolve, reject) {
-
-    if (this.testing === false) {
-      reject(new StopIterationError());
+    if (!pass) {
+      this.stop();
+      this.iter(resolve, reject);
       return undefined;
     }
 
-    this.source.next().then(this.test.bind(this, resolve, reject), reject);
+    resolve(value);
 
   };
 

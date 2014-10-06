@@ -27,33 +27,60 @@ module.exports = (function () {
   "use strict";
 
   var util = require('util'),
-    FilterIteratorBase = require('./filterbase'),
-    Iterable = require('../core/iterable');
+    when = require('deferredjs').when,
+    iter = require('./iter'),
+    Iterator = require('../core/iterator'),
+    StopIterationError = require('../core/stopiteration'),
+    testExcepted = {};
 
+  function truthy(v) {
+    if (v) {
+      return true;
+    }
+    return false;
+  }
 
-  function DropWhileIterator(test, iterable) {
+  function FilterIteratorBase(test, iterable) {
 
-    FilterIteratorBase.call(this, test, iterable);
-    this.dropping = true;
+    Iterator.call(this);
+    this.source = iter(iterable);
+    this.testFn = test || truthy;
+    this.stopIter = false;
 
   }
-  util.inherits(DropWhileIterator, FilterIteratorBase);
+  util.inherits(FilterIteratorBase, Iterator);
 
-  DropWhileIterator.prototype.test = function test(resolve, reject, value, pass) {
+  FilterIteratorBase.prototype.stop = function stop() {
+    this.stopIter = true;
+  };
 
-    if (pass) {
-      this.iter(resolve, reject);
-      return undefined;
+  FilterIteratorBase.prototype.runTestFn = function runTestFn(reject, value) {
+
+    try {
+      return this.testFn(value);
+    } catch (err) {
+      reject(err);
+      return testExcepted;
     }
-    this.dropping = false;
-    resolve(value);
 
   };
 
-  DropWhileIterator.prototype.iter = function iter(resolve, reject) {
+  FilterIteratorBase.prototype.runTest = function runTest(resolve, reject, value) {
 
-    if (this.dropping === false) {
-      this.source.next().then(resolve, reject);
+    var testResult = this.runTestFn(reject, value);
+
+    if (testResult === testExcepted) {
+      return undefined;
+    }
+
+    when(testResult).then(this.test.bind(this, resolve, reject, value));
+
+  };
+
+  FilterIteratorBase.prototype.iter = function iter(resolve, reject) {
+
+    if (this.stopIter) {
+      reject(new StopIterationError());
       return undefined;
     }
 
@@ -61,21 +88,6 @@ module.exports = (function () {
 
   };
 
-  function DropWhileIterable(test, iterable) {
-
-    Iterable.call(this);
-    this.source = iterable;
-    this.test = test;
-
-  }
-  util.inherits(DropWhileIterable, Iterable);
-
-  DropWhileIterable.prototype.iterator = function iterator() {
-
-    return new DropWhileIterator(this.test, this.source);
-
-  };
-
-  return DropWhileIterable;
+  return FilterIteratorBase;
 
 }());
